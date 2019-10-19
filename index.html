@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+
+<html lang="vi">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <!--
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  -->
+  <title>Sen Yêu Của Dũng</title>
+  <link rel="stylesheet" href="css/style.css" type="text/css" media="screen" />
+
+  <script type="text/javascript" charset="utf-8">
+    function hasClassName(inElement, inClassName) {
+      var regExp = new RegExp('(?:^|\\s+)' + inClassName + '(?:\\s+|$)');
+      return regExp.test(inElement.className);
+    }
+
+    function addClassName(inElement, inClassName) {
+      if (!hasClassName(inElement, inClassName))
+        inElement.className = [inElement.className, inClassName].join(' ');
+    }
+
+    function removeClassName(inElement, inClassName) {
+      if (hasClassName(inElement, inClassName)) {
+        var regExp = new RegExp('(?:^|\\s+)' + inClassName + '(?:\\s+|$)', 'g');
+        var curClasses = inElement.className;
+        inElement.className = curClasses.replace(regExp, ' ');
+      }
+    }
+
+    function toggleClassName(inElement, inClassName) {
+      if (hasClassName(inElement, inClassName))
+        removeClassName(inElement, inClassName);
+      else
+        addClassName(inElement, inClassName);
+    }
+
+    function toggleShape() {
+      var shape = document.getElementById('shape');
+      if (hasClassName(shape, 'ring')) {
+        removeClassName(shape, 'ring');
+        addClassName(shape, 'cube');
+      } else {
+        removeClassName(shape, 'cube');
+        addClassName(shape, 'ring');
+      }
+
+      var stage = document.getElementById('stage');
+      if (hasClassName(shape, 'ring'))
+        stage.style.webkitTransform = 'translateZ(-200px)';
+      else
+        stage.style.webkitTransform = '';
+    }
+    
+  // </script>
+  <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script> -->
+
+</head>
+
+<body>
+      <video
+    title="Advertisement"
+    style="background-color: rgb(0, 0, 0); position: absolute; width: 100%; height: 100%;"
+    src="sound/video.mp4"
+    autoplay="true"
+    muted="muted"></video>
+  <div id="container">
+    <div id="stage">
+      <div id="shape" class="cube backfaces">
+        <div class="plane one"></div>
+        <div class="plane two"></div>
+        <div class="plane three"></div>
+        <div class="plane four"></div>
+        <div class="plane five"></div>
+        <div class="plane six"></div>
+        <div class="plane seven"></div>
+        <div class="plane eight"></div>
+        <div class="plane nine"></div>
+        <div class="plane ten"></div>
+        <div class="plane eleven"></div>
+        <div class="plane twelve"></div>
+      </div>
+    </div>
+  </div>
+  
+  
+</body>
+<script src="https://rawgithub.com/soulwire/sketch.js/v1.0/js/sketch.min.js"></script>
+<script>
+  function Particle(x, y, radius) {
+    this.init(x, y, radius);
+  }
+
+  Particle.prototype = {
+
+    init: function (x, y, radius) {
+
+      this.alive = true;
+
+      this.radius = radius || 10;
+      this.wander = 0.15;
+      this.theta = random(TWO_PI);
+      this.drag = 0.92;
+      this.color = '#fff';
+
+      this.x = x || 0.0;
+      this.y = y || 0.0;
+
+      this.vx = 0.0;
+      this.vy = 0.0;
+    },
+
+    move: function () {
+
+      this.x += this.vx;
+      this.y += this.vy;
+
+      this.vx *= this.drag;
+      this.vy *= this.drag;
+
+      this.theta += random(-0.5, 0.5) * this.wander;
+      this.vx += sin(this.theta) * 0.1;
+      this.vy += cos(this.theta) * 0.1;
+
+      this.radius *= 0.96;
+      this.alive = this.radius > 0.5;
+    },
+
+    draw: function (ctx) {
+
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, TWO_PI);
+      ctx.fillStyle = this.color;
+      ctx.fill();
+    }
+  };
+
+  // ----------------------------------------
+  // Example
+  // ----------------------------------------
+
+  var MAX_PARTICLES = 280;
+  var COLOURS = ['#69D2E7', '#A7DBD8', '#E0E4CC', '#F38630', '#FA6900', '#FF4E50', '#F9D423'];
+
+  var particles = [];
+  var pool = [];
+
+  var demo = Sketch.create({
+    container: document.getElementById('container')
+  });
+
+  demo.setup = function () {
+
+    // Set off some initial particles.
+    var i, x, y;
+
+    for (i = 0; i < 20; i++) {
+      x = (demo.width * 0.5) + random(-100, 100);
+      y = (demo.height * 0.5) + random(-100, 100);
+      demo.spawn(x, y);
+    }
+  };
+
+  demo.spawn = function (x, y) {
+
+    if (particles.length >= MAX_PARTICLES)
+      pool.push(particles.shift());
+
+    particle = pool.length ? pool.pop() : new Particle();
+    particle.init(x, y, random(5, 40));
+
+    particle.wander = random(0.5, 2.0);
+    particle.color = random(COLOURS);
+    particle.drag = random(0.9, 0.99);
+
+    theta = random(TWO_PI);
+    force = random(2, 8);
+
+    particle.vx = sin(theta) * force;
+    particle.vy = cos(theta) * force;
+
+    particles.push(particle);
+  }
+
+  demo.update = function () {
+
+    var i, particle;
+
+    for (i = particles.length - 1; i >= 0; i--) {
+
+      particle = particles[i];
+
+      if (particle.alive) particle.move();
+      else pool.push(particles.splice(i, 1)[0]);
+    }
+  };
+
+  demo.draw = function () {
+
+    demo.globalCompositeOperation = 'lighter';
+
+    for (var i = particles.length - 1; i >= 0; i--) {
+      particles[i].draw(demo);
+    }
+  };
+
+  demo.mousemove = function () {
+
+    var particle, theta, force, touch, max, i, j, n;
+
+    for (i = 0, n = demo.touches.length; i < n; i++) {
+
+      touch = demo.touches[i], max = random(1, 4);
+      for (j = 0; j < max; j++) demo.spawn(touch.x, touch.y);
+    }
+  };
+
+</script>
+
+<script>
+  window.setInterval(function () { this.toggleShape() }, 4000);
+</script>
+
+
+</html>
